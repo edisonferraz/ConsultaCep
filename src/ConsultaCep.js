@@ -1,18 +1,23 @@
 import React, { Component } from 'react';
 import Axios from 'axios';
 
+import styles from './App.css';
+
 export default class ConsultaCepBox extends Component {
 
   constructor() {
     super();
     this.state = {
+      map: '',
+      geocoder: '',
+
       cep: '',
       rua: '',
       bairro: '',
       cidade: '',
       estado: '',
-      lat: -34.397,
-      lng: 150.644
+      lat: -23.533773,
+      lng: -46.625290
     };
 
     this.handleSearch = this.handleSearch.bind(this);
@@ -36,10 +41,9 @@ export default class ConsultaCepBox extends Component {
         let cidade = res.data.localidade;
         let estado = res.data.uf;
         let cep = res.data.cep;
-        //let lat = 40.7128;
-        //let lng = -74.0059;
 
-        //let latLng = convertAddresToLatLng(this.map, this.geocoder, rua);
+        let address = rua + ', ' + cidade;
+        let latLng = convertAddresToLatLng(this.state.map, this.state.geocoder, address);
 
         this.setState({
           rua: rua,
@@ -47,8 +51,6 @@ export default class ConsultaCepBox extends Component {
           cidade: cidade,
           estado: estado,
           cep: cep
-          //lat: latLng.lat,
-          //lng: latLng.lng
         });
       })
   }
@@ -59,10 +61,6 @@ export default class ConsultaCepBox extends Component {
         <ConsultaCep cep={this.state.cep}
           handleChange={this.handleChange}
           handleSearch={this.handleSearch} />
-
-        <button onClick={() => this.setState({ lat: 40.7128, lng: -74.0059 })}>
-          New York
-        </button>
 
         <GoogleMaps state={this.state} />
       </div>
@@ -96,21 +94,17 @@ class GoogleMaps extends Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    this.map.panTo({ lat: nextProps.state.lat, lng: nextProps.state.lng });
-
-    //let address = nextProps.state.rua;
-    //this.latLng = convertAddresToLatLng(this.map, this.geocoder, address);
-    //this.props.setState({ lat: this.latLng.lat, lng: this.latLng.lng });
+    this.props.state.map.panTo({ lat: nextProps.state.lat, lng: nextProps.state.lng });
   }
 
   componentDidMount() {
 
-    this.map = new window.google.maps.Map(this.refs.map, {
+    this.props.state.map = new window.google.maps.Map(this.refs.map, {
       center: { lat: this.props.state.lat, lng: this.props.state.lng },
-      zoom: 8
+      zoom: 14
     });
 
-    this.geocoder = new window.google.maps.Geocoder();
+    this.props.state.geocoder = new window.google.maps.Geocoder();
   }
 
   render() {
@@ -122,34 +116,25 @@ class GoogleMaps extends Component {
         <p>{this.props.state.bairro} - {this.props.state.estado}</p>
         <p>{this.props.state.cep}</p>
 
-        <div id="map" ref="map" style={{ height: '200px', width: '500px' }} />
+        <div className="google-maps" ref="map" />
       </div>
     );
   }
 }
 
 function convertAddresToLatLng(map, geocoder, address) {
-  var latLng = {};
 
   geocoder.geocode({ 'address': address }, function (results, status) {
     if (status == window.google.maps.GeocoderStatus.OK) {
+      map.setCenter(results[0].geometry.location);
 
-      //console.log(results[0].geometry.location.lat(), results[0].geometry.location.lng());
-
-      latLng.lat = results[0].geometry.location.lat();
-      latLng.lngt = results[0].geometry.location.lng();
-
-      //map.setCenter(results[0].geometry.location);
-
-      /*var marker = new window.google.maps.Marker({
-        map: this.map,
+      var marker = new window.google.maps.Marker({
+        map: map,
         position: results[0].geometry.location
-      });*/
+      });
 
     } else {
       alert("Geocode was not successful for the following reason: " + status);
     }
   });
-
-  return latLng;
 }
