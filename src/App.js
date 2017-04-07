@@ -1,11 +1,13 @@
 import React, { Component } from 'react';
 
-import ConsultaCepBox from './ConsultaCep';
+import ConsultaCepBox from './components/ConsultaCep';
 
 class App extends Component {
   render() {
     return (
-      <ConsultaCepBox />
+      <div className="container">
+        <ConsultaCepBox />
+      </div>
     );
   }
 }
