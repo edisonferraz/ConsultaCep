@@ -20,8 +20,8 @@ export default class ConsultaCepBox extends Component {
       bairro: '',
       cidade: '',
       estado: '',
-      lat: -23.533773,
-      lng: -46.625290,
+      lat: -23.5500806,
+      lng: -46.63408270000002,
       showMap: false
     };
 
@@ -184,6 +184,10 @@ function convertAddresToLatLng(map, geocoder, address) {
 
   geocoder.geocode({ 'address': address }, function (results, status) {
     if (status === window.google.maps.GeocoderStatus.OK) {
+
+      console.log(results[0].geometry.location.lat());
+      console.log(results[0].geometry.location.lng());
+
       map.setCenter(results[0].geometry.location);
 
       this.marker = new window.google.maps.Marker({
