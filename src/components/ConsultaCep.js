@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import Axios from 'axios';
+import cepService from '../services/cep';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../App.css';
@@ -15,13 +15,15 @@ export default class ConsultaCepBox extends Component {
         map: '',
         geocoder: '',
       },
-      cep: '',
-      rua: '',
-      bairro: '',
-      cidade: '',
-      estado: '',
-      lat: -23.5500806,
-      lng: -46.63408270000002,
+      endereco: {
+        cep: '',
+        rua: '',
+        bairro: '',
+        cidade: '',
+        estado: '',
+        lat: -23.5500806,
+        lng: -46.63408270000002
+      },
       showMap: false
     };
 
@@ -37,9 +39,11 @@ export default class ConsultaCepBox extends Component {
   handleSearch(e) {
     e.preventDefault();
 
-    Axios.get(`https://viacep.com.br/ws/${this.state.inputCep}/json`)
+    let cep = this.state.inputCep;
+
+    cepService.buscar(cep)
       .then(res => {
-        console.log('axios', res);
+        //console.log('axios', res);
         if (res.data.erro) {
           this.setState({ cepInvalido: true });
         }
@@ -54,11 +58,13 @@ export default class ConsultaCepBox extends Component {
           convertAddresToLatLng(this.state.googleMaps.map, this.state.googleMaps.geocoder, address);
 
           this.setState({
-            rua: rua,
-            bairro: bairro,
-            cidade: cidade,
-            estado: estado,
-            cep: cep,
+            endereco: {
+              rua: rua,
+              bairro: bairro,
+              cidade: cidade,
+              estado: estado,
+              cep: cep
+            },
             showMap: true,
             cepInvalido: false
           });
@@ -67,7 +73,15 @@ export default class ConsultaCepBox extends Component {
   }
 
   handleClose(e) {
-    this.setState({ showMap: false });
+    this.setState({
+      endereco: {
+        lat: -23.5500806,
+        lng: -46.63408270000002
+      },
+      inputCep: '',
+      showMap: false,
+      cepInvalido: false
+    });
   }
 
   render() {
@@ -131,13 +145,18 @@ class GoogleMaps extends Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    this.props.state.googleMaps.map.panTo({ lat: nextProps.state.lat, lng: nextProps.state.lng });
+    if (nextProps.state.endereco.lat && nextProps.state.endereco.lng) {
+      this.props.state.googleMaps.map.panTo({
+        lat: nextProps.state.endereco.lat,
+        lng: nextProps.state.endereco.lng
+      });
+    }
   }
 
   componentDidMount() {
 
     this.props.state.googleMaps.map = new window.google.maps.Map(this.refs.map, {
-      center: { lat: this.props.state.lat, lng: this.props.state.lng },
+      center: { lat: this.props.state.endereco.lat, lng: this.props.state.endereco.lng },
       zoom: 14
     });
 
@@ -161,11 +180,11 @@ class GoogleMaps extends Component {
 
         <div className="card">
           <div className="card-block" style={showAddress}>
-            <h4 className="card-title">{this.props.state.rua}</h4>
+            <h4 className="card-title">{this.props.state.endereco.rua}</h4>
             <p>
-              {this.props.state.bairro} <br />
-              {this.props.state.cidade} - {this.props.state.estado} <br />
-              {this.props.state.cep}
+              {this.props.state.endereco.bairro} <br />
+              {this.props.state.endereco.cidade} - {this.props.state.endereco.estado} <br />
+              {this.props.state.endereco.cep}
             </p>
 
             <button type="button" className="close" onClick={this.props.handleClose}>
@@ -185,8 +204,8 @@ function convertAddresToLatLng(map, geocoder, address) {
   geocoder.geocode({ 'address': address }, function (results, status) {
     if (status === window.google.maps.GeocoderStatus.OK) {
 
-      console.log(results[0].geometry.location.lat());
-      console.log(results[0].geometry.location.lng());
+      //console.log(results[0].geometry.location.lat());
+      //console.log(results[0].geometry.location.lng());
 
       map.setCenter(results[0].geometry.location);
 
